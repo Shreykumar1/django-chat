@@ -1,0 +1,156 @@
+<!-- yourapp/templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ChatApp{% endblock %}</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #435f7a;
+            --accent-color: #3498db;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            height: 100vh;
+            margin: 0;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-title {
+            color: var(--primary-color);
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e1e1e1;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-auth {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-auth:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .auth-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--dark-text) !important;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color) !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">ChatApp</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=random" 
+                                 alt="Profile" 
+                                 class="rounded-circle" 
+                                 style="width: 32px; height: 32px;">
+                            {{ request.user.username }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

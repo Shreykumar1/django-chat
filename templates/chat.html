@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat with {{ room_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Chat Layout */
+    .chat-layout {
+        height: calc(100vh - 72px);
+        margin-top: 1rem;
+    }
+
+    /* Sidebar Styles */
+    .chat-sidebar {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-contacts {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .contact-item {
+        padding: 15px;
+        border: none;
+        border-bottom: 1px solid #eee;
+        transition: all 0.3s ease;
+    }
+
+    .contact-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .contact-item.active {
+        background-color: #e9ecef;
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .contact-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .contact-info {
+        width: calc(100% - 55px);
+    }
+
+    .contact-name {
+        font-weight: 600;
+        color: var(--dark-text);
+        margin-bottom: 2px;
+    }
+
+    .last-message {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: #adb5bd;
+    }
+
+    /* Chat Area Styles */
+    .chat-area {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-header {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+
+    .chat-header img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 15px;
+    }
+
+    .chat-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--dark-text);
+    }
+
+    .search-box {
+        margin-left: auto;
+        max-width: 250px;
+    }
+
+    .search-box input {
+        border-radius: 20px;
+        padding: 8px 15px;
+        border: 1px solid #eee;
+        font-size: 0.9rem;
+    }
+
+    /* Messages Area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+
+    .message {
+        max-width: 75%;
+        margin-bottom: 15px;
+        clear: both;
+    }
+
+    .message-content {
+        padding: 10px 15px;
+        border-radius: 15px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .message.sent {
+        float: right;
+    }
+
+    .message.sent .message-content {
+        background: var(--accent-color);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+
+    .message.received {
+        float: left;
+    }
+
+    .message.received .message-content {
+        background: #e9ecef;
+        color: var(--dark-text);
+        border-bottom-left-radius: 5px;
+    }
+
+    /* Input Area */
+    .chat-input-area {
+        padding: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    .chat-input-box {
+        display: flex;
+        align-items: center;
+        background: #f8f9fa;
+        border-radius: 25px;
+        padding: 5px;
+    }
+
+    .chat-input-box input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 10px 15px;
+        outline: none;
+    }
+
+    .chat-input-box button {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        margin-left: 10px;
+        transition: transform 0.2s;
+    }
+
+    .chat-input-box button:hover {
+        transform: scale(1.1);
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid chat-layout">
+    <div class="row h-100">
+        <!-- Contacts Sidebar -->
+        <div class="col-md-4 col-lg-3 pr-md-0">
+            <div class="chat-sidebar">
+                <div class="p-3 border-bottom">
+                    <h5 class="mb-0">Chats</h5>
+                </div>
+                <div class="chat-contacts">
+                    {% for item in user_last_messages %}
+                    <a href="{% url 'chat' item.user.username %}" class="text-decoration-none">
+                        <div class="contact-item d-flex align-items-center {% if item.user.username == room_name %}active{% endif %}">
+                            <img src="https://ui-avatars.com/api/?name={{ item.user.username|urlencode }}&background=random" 
+                                 alt="{{ item.user.username }}" 
+                                 class="contact-avatar">
+                            <div class="contact-info ml-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="contact-name">{{ item.user.username }}</span>
+                                    {% if item.last_message %}
+                                    <small class="message-time">{{ item.last_message.timestamp|date:"H:i" }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="last-message text-truncate">
+                                    {% if item.last_message %}
+                                        {% if item.last_message.sender == request.user %}
+                                            You: {{ item.last_message.content|truncatewords:5 }}
+                                        {% else %}
+                                            {{ item.last_message.content|truncatewords:5 }}
+                                        {% endif %}
+                                    {% else %}
+                                        No messages yet
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-md-8 col-lg-9 pl-md-0">
+            <div class="chat-area">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <img src="https://ui-avatars.com/api/?name={{ room_name|urlencode }}&background=random" 
+                         alt="{{ room_name }}">
+                    <h3>{{ room_name }}</h3>
+                    <form class="search-box" method="GET" action="">
+                        <input type="text" 
+                               name="search" 
+                               class="form-control" 
+                               placeholder="Search messages..." 
+                               value="{{ search_query }}">
+                    </form>
+                </div>
+
+                <!-- Messages Area -->
+                <div class="chat-messages" id="chatbox">
+                    {% if chats %}
+                        {% for message in chats %}
+                        <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                            <div class="message-content">
+                                {{ message.content }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted mt-4">No messages yet. Start the conversation!</p>
+                    {% endif %}
+                </div>
+
+                <!-- Input Area -->
+                <div class="chat-input-area">
+                    <div class="chat-input-box">
+                        <input type="text" 
+                               id="my_input" 
+                               placeholder="Type a message..." 
+                               required>
+                        <button type="button" id="submit_button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ slug|json_script:"room_slug" }}
+
+<script>
+    const chatbox = document.querySelector("#chatbox");
+
+    function scrollToBottom() {
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    scrollToBottom();
+
+    const roomName = JSON.parse(document.getElementById("room_slug").textContent);
+    const chatSocket = new WebSocket(
+        "ws://" + window.location.host + "/ws/chat/{{ room_name }}/"
+    );
+
+    chatSocket.onopen = function(e) {
+        console.log("WebSocket connection established");
+    };
+
+    chatSocket.onclose = function(e) {
+        console.log("WebSocket connection closed");
+    };
+
+    const messageInput = document.querySelector("#my_input");
+    messageInput.focus();
+    
+    messageInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            document.querySelector("#submit_button").click();
+        }
+    });
+
+    document.querySelector("#submit_button").onclick = function(e) {
+        const messageContent = messageInput.value.trim();
+
+        if (!messageContent) {
+            return;
+        }
+
+        chatSocket.send(JSON.stringify({
+            message: messageContent,
+            username: "{{ request.user.username }}",
+            room_name: "{{ room_name }}",
+        }));
+
+        messageInput.value = "";
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.message && data.sender) {
+            const chatbox = document.querySelector("#chatbox");
+            const noMessages = chatbox.querySelector(".text-muted");
+            if (noMessages) {
+                noMessages.remove();
+            }
+
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${data.sender === "{{ request.user.username }}" ? "sent" : "received"}`;
+            
+            const messageContent = document.createElement("div");
+            messageContent.className = "message-content";
+            messageContent.textContent = data.message;
+            
+            messageDiv.appendChild(messageContent);
+            chatbox.appendChild(messageDiv);
+            
+            scrollToBottom();
+
+            // Update last message in sidebar
+            const activeContact = document.querySelector(".contact-item.active");
+            if (activeContact) {
+                const lastMessage = activeContact.querySelector(".last-message");
+                const timestamp = activeContact.querySelector(".message-time");
+                
+                if (lastMessage) {
+                    lastMessage.textContent = data.sender === "{{ request.user.username }}" 
+                        ? `You: ${data.message}` 
+                        : data.message;
+                }
+                
+                if (timestamp) {
+                    const now = new Date();
+                    timestamp.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                }
+            }
+        }
+    };
+</script>
+{% endblock %}
