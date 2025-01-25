@@ -313,8 +313,11 @@
     scrollToBottom();
 
     const roomName = JSON.parse(document.getElementById("room_slug").textContent);
+    // const chatSocket = new WebSocket(
+    //     "ws://" + window.location.host + "/ws/chat/{{ room_name }}/"
+    // );
     const chatSocket = new WebSocket(
-        "ws://" + window.location.host + "/ws/chat/{{ room_name }}/"
+        "wss://" + window.location.host + "/ws/chat/{{ room_name }}/"
     );
 
     chatSocket.onopen = function(e) {
